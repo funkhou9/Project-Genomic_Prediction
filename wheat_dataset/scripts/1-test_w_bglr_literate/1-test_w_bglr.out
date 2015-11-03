@@ -1,0 +1,124 @@
+
+
+processing file: 1-test_w_bglr.Rmd
+  |                                                                         |                                                                 |   0%  |                                                                         |...                                                              |   4%
+  ordinary text without R code
+
+  |                                                                         |.....                                                            |   8%
+label: unnamed-chunk-1
+  |                                                                         |........                                                         |  12%
+  ordinary text without R code
+
+  |                                                                         |..........                                                       |  16%
+label: unnamed-chunk-2
+  |                                                                         |.............                                                    |  20%
+  ordinary text without R code
+
+  |                                                                         |................                                                 |  24%
+label: unnamed-chunk-3
+  |                                                                         |..................                                               |  28%
+  ordinary text without R code
+
+  |                                                                         |.....................                                            |  32%
+label: unnamed-chunk-4
+  |                                                                         |.......................                                          |  36%
+  ordinary text without R code
+
+  |                                                                         |..........................                                       |  40%
+label: unnamed-chunk-5
+  |                                                                         |.............................                                    |  44%
+  ordinary text without R code
+
+  |                                                                         |...............................                                  |  48%
+label: unnamed-chunk-6
+  |                                                                         |..................................                               |  52%
+  ordinary text without R code
+
+  |                                                                         |....................................                             |  56%
+label: unnamed-chunk-7
+  |                                                                         |.......................................                          |  60%
+  ordinary text without R code
+
+  |                                                                         |..........................................                       |  64%
+label: unnamed-chunk-8
+  |                                                                         |............................................                     |  68%
+  ordinary text without R code
+
+  |                                                                         |...............................................                  |  72%
+label: unnamed-chunk-9
+  |                                                                         |.................................................                |  76%
+  ordinary text without R code
+
+  |                                                                         |....................................................             |  80%
+label: unnamed-chunk-10
+  |                                                                         |.......................................................          |  84%
+  ordinary text without R code
+
+  |                                                                         |.........................................................        |  88%
+label: unnamed-chunk-11
+  |                                                                         |............................................................     |  92%
+  ordinary text without R code
+
+  |                                                                         |..............................................................   |  96%
+label: unnamed-chunk-12 (with options) 
+List of 1
+ $ results: chr "hide"
+
+  |                                                                         |.................................................................| 100%
+  ordinary text without R code
+
+
+output file: 1-test_w_bglr.md
+
+Job Id: 28057571.mgr-04.i
+    Job_Name = 1-test_w_bglr
+    Job_Owner = funkhou9@dev-intel14.i
+    job_state = R
+    queue = main
+    server = mgr-04.i
+    Checkpoint = u
+    ctime = Mon Nov  2 19:31:18 2015
+    Error_Path = dev-intel14:/mnt/research/pigsnp/NSR/Genomic_prediction/wheat
+	_dataset/scripts/1-test_w_bglr.out
+    exec_host = csn-039/0
+    Hold_Types = n
+    Join_Path = oe
+    Keep_Files = n
+    Mail_Points = abe
+    mtime = Mon Nov  2 19:32:05 2015
+    Output_Path = dev-intel14:/mnt/research/pigsnp/NSR/Genomic_prediction/whea
+	t_dataset/scripts/1-test_w_bglr.out
+    Priority = 0
+    qtime = Mon Nov  2 19:31:18 2015
+    Rerunable = False
+    Resource_List.mem = 8gb
+    Resource_List.nodect = 1
+    Resource_List.nodes = 1:ppn=1:intel14
+    Resource_List.walltime = 00:10:00
+    session_id = 83774
+    Variable_List = PBS_O_QUEUE=main,PBS_O_HOME=/mnt/home/funkhou9,
+	PBS_O_LOGNAME=funkhou9,
+	PBS_O_PATH=/opt/software/Clang/20140106--GCC-4.8.2/bin:/opt/software/
+	R/3.1.0--GCC-4.8.2/bin:/opt/software/boost/1.55.0--GCC-4.8.2--OpenMPI-
+	1.6.5/bin:/opt/software/OpenMPI/1.6.5--GCC-4.8.2/bin:/opt/software/GCC
+	/4.8.2/bin:/opt/software/powertools/bin:/opt/software/Stata/13.0:/opt/
+	software/MATLAB/R2014a/bin:/opt/software/Python/2.7.2--GCC-4.4.5/bin:/
+	opt/software/cmake/2.8.5--GCC-4.4.5/bin:/usr/lib64/qt-3.3/bin:/opt/sof
+	tware/lmod/bin:/opt/moab/bin:/usr/local/bin:/bin:/usr/bin:/usr/local/s
+	bin:/usr/sbin:/sbin:/usr/local/hpcc/bin:/mnt/home/funkhou9/Productivit
+	y,PBS_O_MAIL=/var/spool/mail/funkhou9,PBS_O_SHELL=/bin/bash,
+	PBS_O_LANG=en_US.UTF-8,
+	PBS_O_WORKDIR=/mnt/research/pigsnp/NSR/Genomic_prediction/wheat_datas
+	et/scripts,PBS_O_HOST=dev-intel14.i,PBS_O_SERVER=mgr-04
+    euser = funkhou9
+    egroup = gen
+    queue_type = E
+    etime = Mon Nov  2 19:31:18 2015
+    submit_args = base.sh
+    start_time = Mon Nov  2 19:32:05 2015
+    Walltime.Remaining = 560
+    start_count = 1
+    fault_tolerant = False
+    job_radix = 0
+    submit_host = dev-intel14.i
+
