@@ -42,7 +42,14 @@ library(breedTools)
 library(magrittr)
 # devtools::install_github("gdlc/BGLR-R")
 library(BGLR)
+library(ggplot2)
+```
 
+```
+## Loading required package: methods
+```
+
+```r
 sessionInfo()
 ```
 
@@ -59,14 +66,18 @@ sessionInfo()
 ## [11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
 ## 
 ## attached base packages:
-## [1] stats     graphics  grDevices utils     datasets  base     
+## [1] methods   stats     graphics  grDevices utils     datasets  base     
 ## 
 ## other attached packages:
-## [1] BGLR_1.0.5     magrittr_1.5   breedTools_0.1 knitr_1.11    
+## [1] ggplot2_1.0.1  BGLR_1.0.5     magrittr_1.5   breedTools_0.1
+## [5] knitr_1.11    
 ## 
 ## loaded via a namespace (and not attached):
-## [1] evaluate_0.8   formatR_1.2.1  methods_3.1.0  quadprog_1.5-5
-## [5] stringi_1.0-1  stringr_1.0.0  tools_3.1.0
+##  [1] colorspace_1.2-6 digest_0.6.8     evaluate_0.8     formatR_1.2.1   
+##  [5] grid_3.1.0       gtable_0.1.2     kinship2_1.6.4   lattice_0.20-33 
+##  [9] MASS_7.3-43      Matrix_1.2-2     munsell_0.4.2    plyr_1.8.3      
+## [13] proto_0.3-10     quadprog_1.5-5   Rcpp_0.12.1      reshape2_1.4.1  
+## [17] scales_0.3.0     stringi_1.0-1    stringr_1.0.0    tools_3.1.0
 ```
 
 <br />
@@ -107,6 +118,7 @@ Center and scale X.
 
 ```r
 X <- scale(wheat.X, center = TRUE, scale = TRUE)
+y <- wheat.Y[, 1]
 ```
 
 Compute G.
@@ -161,22 +173,73 @@ bc <- breedTools::allele_freq(wheat.X, list(group1 = rownames(wheat.X[group1_idx
 		breedTools::solve_composition(wheat.X, .)
 ```
 
+Obtain "purity" of group 1.
+
+
+```r
+prob <- bc[, 1]
+```
+
+Re-plot and color according to "group purity".
+
+
+```r
+pcs <- as.data.frame(evd$vectors)
+colnames(pcs) <- paste(rep("PC", ncol(pcs)), seq(1:ncol(pcs)), sep = '')
+pcs <- cbind(prob, pcs)
+
+ggplot(pcs, aes(x = PC1, y = PC2, color = prob)) +
+	geom_point(size = 4, alpha = 0.7) + scale_color_gradient(low = "red", high = "blue")
+```
+
+![plot of chunk unnamed-chunk-12](figure/unnamed-chunk-12-1.png) 
+
 ### Fit gBLUP model
+
+
+```r
+X0 <- X
+X1 <- X
+X2 <- X
+
+for (i in 1:nrow(X1)) { 
+  X1[i, ] <- X1[i, ] * prob[i]
+  X2[i, ] <- X2[i, ] * (1 - prob[i])
+}
+```
+
+Standardize each incidence matrix.
+
+
+```r
+X0 <- scale(X0) / sqrt(ncol(X0))
+X1 <- scale(X1) / sqrt(ncol(X1))
+X2 <- scale(X2) / sqrt(ncol(X2))
+```
+
 Create linear predictor.
 
 
 ```r
-lp <- list(list(V = evd$vectors, d = evd$values, model = 'RKHS'))
+ETA <- list(main = list(X = X0, model = 'BRR', df0 = .1),
+  		    int1 = list(X = X1, model = 'BRR', df0 = .1),
+  		    int2 = list(X = X2, model = 'BRR', df0 = .1))
 ```
 
-Fit the model $\textbf{y} = \textbf{Z}\textbf{u} + \textbf{e}$
+Fit the model.
 
 
 ```r
-fit_gblup <- BGLR(y = wheat.Y[, 1],
-				  ETA = lp,
-				  nIter = 12000,
-				  burnIn = 2000,
-				  saveAt = "../1-")
+fm <- BGLR(y = y,
+		   ETA = ETA,
+		   nIter = 12000,
+		   burnIn = 2000,
+		   groups = ifelse(prob > .5, 1, 2), df0 = .1)
+
+varU0 <- fm$ETA$main$varB
+varU1 <- fm$ETA$int1$varB
+varU2 <- fm$ETA$int2$varB
+COR <- varU0 / sqrt((varU0 + varU1) * (varU0 + varU2))
+fm$varE
 ```
 

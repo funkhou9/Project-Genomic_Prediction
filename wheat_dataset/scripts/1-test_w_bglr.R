@@ -36,6 +36,7 @@ library(breedTools)
 library(magrittr)
 # devtools::install_github("gdlc/BGLR-R")
 library(BGLR)
+library(ggplot2)
 
 sessionInfo()
 
@@ -54,6 +55,7 @@ dim(wheat.X)
 #' ### Cluster and estimate composition
 #' Center and scale X.
 X <- scale(wheat.X, center = TRUE, scale = TRUE)
+y <- wheat.Y[, 1]
 
 #' Compute G.
 G <- X %*% t(X) / ncol(X)
@@ -75,6 +77,7 @@ plot(evd$vectors[, 1],
 	 ylab = "PC2",
 	 col = c("black", "red")[(group1_idx | group2_idx) + 1])
 
+
 #' Allele frequency calculations with breedTools v0.1 requires rownames for genotype matrix X
 rownames(wheat.X) <- seq(1, nrow(wheat.X))
 
@@ -83,19 +86,50 @@ bc <- breedTools::allele_freq(wheat.X, list(group1 = rownames(wheat.X[group1_idx
 									  	  	group2 = rownames(wheat.X[group2_idx, ]))) %>%
 		breedTools::solve_composition(wheat.X, .)
 
+#' Obtain "purity" of group 1.
+prob <- bc[, 1]
+
+#' Re-plot and color according to "group purity".
+pcs <- as.data.frame(evd$vectors)
+colnames(pcs) <- paste(rep("PC", ncol(pcs)), seq(1:ncol(pcs)), sep = '')
+pcs <- cbind(prob, pcs)
+
+ggplot(pcs, aes(x = PC1, y = PC2, color = prob)) +
+	geom_point(size = 4, alpha = 0.7) + scale_color_gradient(low = "red", high = "blue")
 
 #' ### Fit gBLUP model
+X0 <- X
+X1 <- X
+X2 <- X
+
+for (i in 1:nrow(X1)) { 
+  X1[i, ] <- X1[i, ] * prob[i]
+  X2[i, ] <- X2[i, ] * (1 - prob[i])
+}
+
+#' Standardize each incidence matrix.
+X0 <- scale(X0) / sqrt(ncol(X0))
+X1 <- scale(X1) / sqrt(ncol(X1))
+X2 <- scale(X2) / sqrt(ncol(X2))
+
 #' Create linear predictor.
-lp <- list(list(V = evd$vectors, d = evd$values, model = 'RKHS'))
+ETA <- list(main = list(X = X0, model = 'BRR', df0 = .1),
+  		    int1 = list(X = X1, model = 'BRR', df0 = .1),
+  		    int2 = list(X = X2, model = 'BRR', df0 = .1))
 
-#' Fit the model $\textbf{y} = \textbf{Z}\textbf{u} + \textbf{e}$
+#' Fit the model.
 #+ results = 'hide'
-fit_gblup <- BGLR(y = wheat.Y[, 1],
-				  ETA = lp,
-				  nIter = 12000,
-				  burnIn = 2000,
-				  saveAt = "../1-")
+fm <- BGLR(y = y,
+		   ETA = ETA,
+		   nIter = 12000,
+		   burnIn = 2000,
+		   groups = ifelse(prob > .5, 1, 2), df0 = .1)
 
+varU0 <- fm$ETA$main$varB
+varU1 <- fm$ETA$int1$varB
+varU2 <- fm$ETA$int2$varB
+COR <- varU0 / sqrt((varU0 + varU1) * (varU0 + varU2))
+fm$varE
 
 
 
