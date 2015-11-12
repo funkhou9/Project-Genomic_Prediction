@@ -36,6 +36,7 @@ library(magrittr)
 library(BGLR)
 library(ggplot2)
 library(cluster)
+library(grid)
 
 sessionInfo()
 
@@ -69,8 +70,10 @@ pcs <- cbind("cluster" = c$clustering, pcs)
 #' Plot according to clustering.
 ggplot(pcs, aes(x = PC1, y = PC2, color = factor(cluster))) +
 	geom_point(size = 4, alpha = 1) + 
-		scale_color_manual(values = c("blue", "red")) + 
-			theme(legend.position = "none")
+		scale_color_manual(name = quote(Group), values = c("blue", "red")) +
+			theme(legend.title = element_text(color = rgb(0, 0, 0), size = 15),
+				  legend.text = element_text(color = rgb(0, 0, 0), size = 15),
+				  legend.key.height = unit(2, "line"))
 
 #' Identify medoids.
 med1 <- apply(G, 1, function(x) identical(x, c$medoids[1, ]))
@@ -101,11 +104,14 @@ bc <- breedTools::allele_freq(wheat.X, list(group1 = rownames(wheat.X[ref1, ]),
 prob <- bc[, 1]
 
 #' Re-plot and color according to "group purity".
-pcs <- cbind("Group1_Comp" = prob, pcs)
+pcs <- cbind("Group1" = prob, pcs)
 
-ggplot(pcs, aes(x = PC1, y = PC2, color = Group1_Comp)) +
+ggplot(pcs, aes(x = PC1, y = PC2, color = Group1)) +
 	geom_point(size = 4, alpha = 0.7) +
-		scale_color_gradient(low = "red", high = "blue")
+		scale_color_gradient(low = "red", high = "blue") +
+			theme(legend.title = element_text(color = rgb(0, 0, 0), size = 15),
+				  legend.text = element_text(color = rgb(0, 0, 0), size = 15),
+				  legend.key.height = unit(2.5, "line"))
 
 #' ### Fit gBLUP model
 X0 <- X

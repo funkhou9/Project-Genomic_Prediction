@@ -49,6 +49,7 @@ library(ggplot2)
 
 ```r
 library(cluster)
+library(grid)
 
 sessionInfo()
 ```
@@ -66,7 +67,8 @@ sessionInfo()
 ## [11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
 ## 
 ## attached base packages:
-## [1] methods   stats     graphics  grDevices utils     datasets  base     
+## [1] grid      methods   stats     graphics  grDevices utils     datasets 
+## [8] base     
 ## 
 ## other attached packages:
 ## [1] cluster_2.0.3  ggplot2_1.0.1  BGLR_1.0.5     magrittr_1.5  
@@ -74,10 +76,10 @@ sessionInfo()
 ## 
 ## loaded via a namespace (and not attached):
 ##  [1] colorspace_1.2-6 digest_0.6.8     evaluate_0.8     formatR_1.2.1   
-##  [5] grid_3.1.0       gtable_0.1.2     kinship2_1.6.4   lattice_0.20-33 
-##  [9] MASS_7.3-43      Matrix_1.2-2     munsell_0.4.2    plyr_1.8.3      
-## [13] proto_0.3-10     quadprog_1.5-5   Rcpp_0.12.1      reshape2_1.4.1  
-## [17] scales_0.3.0     stringi_1.0-1    stringr_1.0.0    tools_3.1.0
+##  [5] gtable_0.1.2     kinship2_1.6.4   lattice_0.20-33  MASS_7.3-43     
+##  [9] Matrix_1.2-2     munsell_0.4.2    plyr_1.8.3       proto_0.3-10    
+## [13] quadprog_1.5-5   Rcpp_0.12.1      reshape2_1.4.1   scales_0.3.0    
+## [17] stringi_1.0-1    stringr_1.0.0    tools_3.1.0
 ```
 
 ## Load data
@@ -149,8 +151,10 @@ Plot according to clustering.
 ```r
 ggplot(pcs, aes(x = PC1, y = PC2, color = factor(cluster))) +
 	geom_point(size = 4, alpha = 1) + 
-		scale_color_manual(values = c("blue", "red")) + 
-			theme(legend.position = "none")
+		scale_color_manual(name = quote(Group), values = c("blue", "red")) +
+			theme(legend.title = element_text(color = rgb(0, 0, 0), size = 15),
+				  legend.text = element_text(color = rgb(0, 0, 0), size = 15),
+				  legend.key.height = unit(2, "line"))
 ```
 
 ![plot of chunk unnamed-chunk-9](figure/unnamed-chunk-9-1.png) 
@@ -213,11 +217,14 @@ Re-plot and color according to "group purity".
 
 
 ```r
-pcs <- cbind("Group1_Comp" = prob, pcs)
+pcs <- cbind("Group1" = prob, pcs)
 
-ggplot(pcs, aes(x = PC1, y = PC2, color = Group1_Comp)) +
+ggplot(pcs, aes(x = PC1, y = PC2, color = Group1)) +
 	geom_point(size = 4, alpha = 0.7) +
-		scale_color_gradient(low = "red", high = "blue")
+		scale_color_gradient(low = "red", high = "blue") +
+			theme(legend.title = element_text(color = rgb(0, 0, 0), size = 15),
+				  legend.text = element_text(color = rgb(0, 0, 0), size = 15),
+				  legend.key.height = unit(2.5, "line"))
 ```
 
 ![plot of chunk unnamed-chunk-16](figure/unnamed-chunk-16-1.png) 
