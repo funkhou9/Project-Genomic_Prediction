@@ -14,7 +14,6 @@
 	- [Cluster and estimate composition](#cluster-and-estimate-composition)
 	- [Fit gBLUP model](#fit-gblup-model)
 
-<br />
 ## Objectives
 Test methodology for the analysis of heterogeneous populations using genomic predictions.
 Methods are intended to be a modification of those in
@@ -33,7 +32,6 @@ by Gustavo de los Compos et al. This will involve:
 setwd("/mnt/research/pigsnp/NSR/Genomic_prediction/wheat_dataset/scripts")
 ```
 
-<br />
 ## Install libraries
 
 
@@ -50,6 +48,8 @@ library(ggplot2)
 ```
 
 ```r
+library(cluster)
+
 sessionInfo()
 ```
 
@@ -69,8 +69,8 @@ sessionInfo()
 ## [1] methods   stats     graphics  grDevices utils     datasets  base     
 ## 
 ## other attached packages:
-## [1] ggplot2_1.0.1  BGLR_1.0.5     magrittr_1.5   breedTools_0.1
-## [5] knitr_1.11    
+## [1] cluster_2.0.3  ggplot2_1.0.1  BGLR_1.0.5     magrittr_1.5  
+## [5] breedTools_0.1 knitr_1.11    
 ## 
 ## loaded via a namespace (and not attached):
 ##  [1] colorspace_1.2-6 digest_0.6.8     evaluate_0.8     formatR_1.2.1   
@@ -80,7 +80,6 @@ sessionInfo()
 ## [17] scales_0.3.0     stringi_1.0-1    stringr_1.0.0    tools_3.1.0
 ```
 
-<br />
 ## Load data
 Provided by BGLR package, a dataset consisting of 599 pure lines of wheat genotyped
 	at 1279 DArT markers.
@@ -110,7 +109,6 @@ dim(wheat.X)
 ## [1]  599 1279
 ```
 
-<br />
 ## Analysis
 ### Cluster and estimate composition
 Center and scale X.
@@ -128,34 +126,65 @@ Compute G.
 G <- X %*% t(X) / ncol(X)
 ```
 
+Identify groups using partitioning around medoids.
+
+
+```r
+c <- pam(G, 2)
+```
+
 Use PCA to separate wheat groups as done previously.
 
 
 ```r
 evd <- eigen(G)
-plot(evd$vectors[, 1],
-	 evd$vectors[, 2],
-	 xlab = "PC1",
-	 ylab = "PC2")
+pcs <- as.data.frame(evd$vectors)
+colnames(pcs) <- paste(rep("PC", ncol(pcs)), seq(1:ncol(pcs)), sep = '')
+pcs <- cbind("cluster" = c$clustering, pcs)
 ```
 
-![plot of chunk unnamed-chunk-7](figure/unnamed-chunk-7-1.png) 
-
-By eye, arbitrarily define the individuals we want to isolate for "breed composition" reference.
-Might there be a more precise way to "grap the peaks" from each?
+Plot according to clustering.
 
 
 ```r
-group1_idx <- (evd$vectors[, 1] > -0.05 & evd$vectors[, 1] < -0.035 & evd$vectors[, 2] > -0.01 & evd$vectors[, 2] < 0.03)
-group2_idx <- (evd$vectors[, 1] > 0.018 & evd$vectors[, 1] < 0.04 & evd$vectors[, 2] > -0.055 & evd$vectors[, 2] < -0.03)
-plot(evd$vectors[, 1],
-	 evd$vectors[, 2],
-	 xlab = "PC1",
-	 ylab = "PC2",
-	 col = c("black", "red")[(group1_idx | group2_idx) + 1])
+ggplot(pcs, aes(x = PC1, y = PC2, color = factor(cluster))) +
+	geom_point(size = 4, alpha = 1) + 
+		scale_color_manual(values = c("blue", "red")) + 
+			theme(legend.position = "none")
 ```
 
-![plot of chunk unnamed-chunk-8](figure/unnamed-chunk-8-1.png) 
+![plot of chunk unnamed-chunk-9](figure/unnamed-chunk-9-1.png) 
+
+Identify medoids.
+
+
+```r
+med1 <- apply(G, 1, function(x) identical(x, c$medoids[1, ]))
+med2 <- apply(G, 1, function(x) identical(x, c$medoids[2, ]))
+p1 <- pcs[med1, c("PC1", "PC2")]
+p2 <- pcs[med2, c("PC1", "PC2")]
+```
+
+Take x number of points within an arbitrary radius of each medoid.
+
+
+```r
+ref1 <- dist(rbind(p1, pcs[, c("PC1", "PC2")]))[1:599] < 0.015
+ref2 <- dist(rbind(p2, pcs[, c("PC1", "PC2")]))[1:599] < 0.015
+```
+
+Observe chosen reference samples from each cluster.
+
+
+```r
+plot(pcs[, "PC1"],
+	 pcs[, "PC2"],
+	 xlab = "PC1",
+	 ylab = "PC2",
+	 col = c("black", "red")[(ref1 | ref2) + 1])
+```
+
+![plot of chunk unnamed-chunk-12](figure/unnamed-chunk-12-1.png) 
 
 Allele frequency calculations with breedTools v0.1 requires rownames for genotype matrix X
 
@@ -168,8 +197,8 @@ Solve "breed composition" for each line.
 
 
 ```r
-bc <- breedTools::allele_freq(wheat.X, list(group1 = rownames(wheat.X[group1_idx, ]),
-									  	  	group2 = rownames(wheat.X[group2_idx, ]))) %>%
+bc <- breedTools::allele_freq(wheat.X, list(group1 = rownames(wheat.X[ref1, ]),
+									  	  	group2 = rownames(wheat.X[ref2, ]))) %>%
 		breedTools::solve_composition(wheat.X, .)
 ```
 
@@ -184,15 +213,14 @@ Re-plot and color according to "group purity".
 
 
 ```r
-pcs <- as.data.frame(evd$vectors)
-colnames(pcs) <- paste(rep("PC", ncol(pcs)), seq(1:ncol(pcs)), sep = '')
-pcs <- cbind(prob, pcs)
+pcs <- cbind("Group1_Comp" = prob, pcs)
 
-ggplot(pcs, aes(x = PC1, y = PC2, color = prob)) +
-	geom_point(size = 4, alpha = 0.7) + scale_color_gradient(low = "red", high = "blue")
+ggplot(pcs, aes(x = PC1, y = PC2, color = Group1_Comp)) +
+	geom_point(size = 4, alpha = 0.7) +
+		scale_color_gradient(low = "red", high = "blue")
 ```
 
-![plot of chunk unnamed-chunk-12](figure/unnamed-chunk-12-1.png) 
+![plot of chunk unnamed-chunk-16](figure/unnamed-chunk-16-1.png) 
 
 ### Fit gBLUP model
 
@@ -232,14 +260,16 @@ Fit the model.
 ```r
 fm <- BGLR(y = y,
 		   ETA = ETA,
-		   nIter = 12000,
+		   nIter = 24000,
 		   burnIn = 2000,
-		   groups = ifelse(prob > .5, 1, 2), df0 = .1)
+		   groups = ifelse(prob > .5, 1, 2), df0 = .1,
+		   saveAt = "../1-")
 
 varU0 <- fm$ETA$main$varB
 varU1 <- fm$ETA$int1$varB
 varU2 <- fm$ETA$int2$varB
 COR <- varU0 / sqrt((varU0 + varU1) * (varU0 + varU2))
+
 fm$varE
 ```
 
